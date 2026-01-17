@@ -1,1 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychomatrix Music Creator - สร้างเพลงจากตัวเลขชีวิต</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="description" content="สร้างเพลงส่วนตัวจากตัวเลขวันเกิดและชื่อของคุณ ฟรี 1 เพลงต่อวัน">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" href="icons/icon-72x72.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Sarabun:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Install PWA Banner -->
+    <div id="installBanner" class="install-banner">
+        <div class="banner-content">
+            <span>ติดตั้งแอปเพื่อใช้งานออฟไลน์และเข้าถึงได้เร็วขึ้น!</span>
+            <button id="installButton" class="install-btn">ติดตั้ง</button>
+            <button id="dismissBanner" class="dismiss-btn">ปิด</button>
+        </div>
+    </div>
 
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <img src="assets/logo.png" alt="Psychomatrix Music Logo" class="logo-img">
+                <h1 class="logo-text">Psychomatrix Music</h1>
+            </div>
+            <div class="header-actions">
+                <button id="themeToggle" class="theme-toggle" aria-label="เปลี่ยนธีม">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="installBtn" class="install-btn-small" aria-label="ติดตั้งแอป">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-content">
+                    <h2 class="hero-title">สร้างเพลงส่วนตัวจากตัวเลขชีวิตของคุณ</h2>
+                    <p class="hero-subtitle">ใช้ตัวเลขวันเกิดและชื่อสร้างเพลงเอกลักษณ์เฉพาะตัว</p>
+                    
+                    <div class="counter-badge">
+                        <i class="fas fa-music"></i>
+                        <span>คุณสามารถสร้างได้อีก <span id="dailyCounter">1</span> เพลงวันนี้</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Music Creation Form -->
+            <section class="form-section">
+                <div class="card">
+                    <h3 class="card-title">ใส่ข้อมูลเพื่อสร้างเพลง</h3>
+                    
+                    <form id="musicForm">
+                        <div class="form-group">
+                            <label for="fullName">
+                                <i class="fas fa-user"></i> ชื่อ-สกุล
+                            </label>
+                            <input 
+                                type="text" 
+                                id="fullName" 
+                                placeholder="เช่น สมชาย ใจดี"
+                                required
+                                maxlength="50"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birthDate">
+                                <i class="fas fa-calendar"></i> วันเกิด
+                            </label>
+                            <input 
+                                type="date" 
+                                id="birthDate" 
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birthTime">
+                                <i class="fas fa-clock"></i> เวลาเกิด (ไม่บังคับ)
+                            </label>
+                            <input 
+                                type="time" 
+                                id="birthTime"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="musicStyle">
+                                <i class="fas fa-sliders-h"></i> แนวเพลง
+                            </label>
+                            <select id="musicStyle">
+                                <option value="lofi">Lo-fi Beats (ผ่อนคลาย)</option>
+                                <option value="chill">Chill / Ambient (ชิลล์)</option>
+                                <option value="study">Study / Focus (เรียน/โฟกัส)</option>
+                                <option value="relax">Relax / Meditation (ผ่อนคลาย/สมาธิ)</option>
+                            </select>
+                        </div>
+
+                        <div class="terms-checkbox">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <label for="agreeTerms">
+                                ฉันยอมรับให้ใช้ข้อมูลเพื่อสร้างเพลงและเข้าใจว่าฟรี 1 เพลงต่อวัน
+                            </label>
+                        </div>
+
+                        <button type="submit" id="generateBtn" class="generate-btn">
+                            <i class="fas fa-magic"></i> สร้างเพลงของฉัน (ฟรี!)
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Result Section -->
+            <section id="resultSection" class="result-section hidden">
+                <div class="card">
+                    <h3 class="card-title">
+                        <i class="fas fa-music"></i> เพลงของคุณพร้อมแล้ว!
+                    </h3>
+                    
+                    <div class="music-info">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">ชื่อเพลง</span>
+                                <span id="songTitle" class="info-value">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">คีย์</span>
+                                <span id="songKey" class="info-value">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ความเร็ว</span>
+                                <span id="songTempo" class="info-value">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">รูปแบบ</span>
+                                <span id="songPattern" class="info-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualizer -->
+                    <div class="visualizer-container">
+                        <div class="visualizer-header">
+                            <h4>Visualizer</h4>
+                            <div id="playbackStatus" class="playback-status hidden">
+                                <div class="pulse-dot"></div>
+                                <span>กำลังเล่น...</span>
+                            </div>
+                        </div>
+                        <div id="visualizer" class="visualizer">
+                            <div id="visualizerBars" class="visualizer-bars"></div>
+                        </div>
+                    </div>
+
+                    <!-- Melody Preview -->
+                    <div class="melody-preview">
+                        <h4>ลำดับโน้ต</h4>
+                        <div id="melodyNotes" class="melody-notes">
+                            <!-- โน้ตจะแสดงที่นี่ -->
+                        </div>
+                    </div>
+
+                    <!-- Player Controls -->
+                    <div class="player-controls">
+                        <button id="playBtn" class="control-btn play-btn">
+                            <i class="fas fa-play"></i> เล่นเพลง
+                        </button>
+                        <button id="stopBtn" class="control-btn stop-btn">
+                            <i class="fas fa-stop"></i> หยุด
+                        </button>
+                        <button id="saveBtn" class="control-btn save-btn">
+                            <i class="fas fa-download"></i> บันทึก
+                        </button>
+                    </div>
+
+                    <!-- Share Section -->
+                    <div class="share-section">
+                        <p>แชร์เพลงของคุณ:</p>
+                        <div class="share-buttons">
+                            <button id="copyLinkBtn" class="share-btn">
+                                <i class="fas fa-link"></i> คัดลอกลิงก์
+                            </button>
+                            <button id="shareBtn" class="share-btn">
+                                <i class="fas fa-share-alt"></i> แชร์
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upgrade Section -->
+            <section class="upgrade-section">
+                <div class="card premium-card">
+                    <div class="premium-badge">
+                        <i class="fas fa-crown"></i> Premium
+                    </div>
+                    <h3 class="card-title">ต้องการมากกว่า 1 เพลงต่อวัน?</h3>
+                    <p class="premium-desc">
+                        อัพเกรดเป็น Premium เพื่อสร้างเพลงได้ไม่จำกัด และฟังแบบเต็มคุณภาพ
+                    </p>
+                    
+                    <div class="pricing-grid">
+                        <div class="pricing-tier">
+                            <h4>Donor</h4>
+                            <div class="price">99฿<span>/เดือน</span></div>
+                            <ul class="features">
+                                <li><i class="fas fa-check"></i> 3 เพลง/วัน</li>
+                                <li><i class="fas fa-check"></i> คุณภาพเสียงดี</li>
+                                <li><i class="fas fa-check"></i> ไม่มีโฆษณา</li>
+                            </ul>
+                            <button class="upgrade-btn">เลือกแพ็คเกจนี้</button>
+                        </div>
+                        
+                        <div class="pricing-tier featured">
+                            <div class="popular-badge">แนะนำ</div>
+                            <h4>Patron</h4>
+                            <div class="price">199฿<span>/เดือน</span></div>
+                            <ul class="features">
+                                <li><i class="fas fa-check"></i> ไม่จำกัดเพลง</li>
+                                <li><i class="fas fa-check"></i> คุณภาพสูงสุด</li>
+                                <li><i class="fas fa-check"></i> ฟีเจอร์ครบ</li>
+                                <li><i class="fas fa-check"></i> Support พิเศษ</li>
+                            </ul>
+                            <button class="upgrade-btn primary">เลือกแพ็คเกจนี้</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="features-section">
+                <h3 class="section-title">ทำไมต้อง Psychomatrix Music?</h3>
+                <div class="features-grid">
+                    <div class="feature">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <h4>เอกลักษณ์เฉพาะตัว</h4>
+                        <p>แต่ละเพลงสร้างจากข้อมูลเฉพาะของคุณ ไม่ซ้ำใคร</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4>ใช้งานบนมือถือ</h4>
+                        <p>ติดตั้งเป็นแอปและใช้งานออฟไลน์ได้</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h4>เพื่อสุขภาพจิต</h4>
+                        <p>ดนตรีบำบัดจากตัวเลข ช่วยผ่อนคลายและโฟกัส</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/logo.png" alt="Logo" class="footer-logo-img">
+                    <span>Psychomatrix Music</span>
+                </div>
+                
+                <div class="footer-links">
+                    <a href="#" class="footer-link">เงื่อนไขการใช้งาน</a>
+                    <a href="#" class="footer-link">นโยบายความเป็นส่วนตัว</a>
+                    <a href="#" class="footer-link">ติดต่อเรา</a>
+                </div>
+                
+                <div class="footer-copy">
+                    &copy; 2024 Psychomatrix Music. All rights reserved.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="loading-spinner"></div>
+            <h3>กำลังสร้างเพลง...</h3>
+            <p id="loadingMessage">กำลังประมวลผลตัวเลขและสร้างเมโลดี้</p>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="toast hidden">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">สร้างเพลงสำเร็จ!</span>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="toast error hidden">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessage">เกิดข้อผิดพลาด</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/music-core.js"></script>
+    <script src="js/music-generator.js"></script>
+    <script src="js/pwa-handler.js"></script>
+    
+    <!-- Initialize PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
