@@ -222,7 +222,25 @@ function initializeAppState() {
         elements.birthDate.value = maxDate.toISOString().split('T')[0];
     }
     
-    console.log('✅ App state initialized. Daily counter:', AppState.dailyCounter);
+     // ========== FIX: Check PWA installation status ==========
+    setTimeout(() => {
+        if (window.PWAHandler) {
+            console.log('📱 PWA Handler status:', window.PWAHandler.debugInfo());
+            
+            // Check if install prompt should be shown
+            if (!window.PWAHandler.getInstallationStatus() && window.deferredPrompt) {
+                console.log('📱 Install prompt is available');
+                window.PWAHandler.showInstallUI();
+            }
+        }
+        
+        // Update debug panel
+        if (typeof updatePWAStatus === 'function') {
+            updatePWAStatus();
+        }
+    }, 1000);
+    
+    console.log('✅ App state initialized');
 }
 
 // ========== FORM HANDLING ==========
