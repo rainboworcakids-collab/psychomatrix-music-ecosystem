@@ -183,17 +183,29 @@ function initializeAppState() {
     const savedCounter = localStorage.getItem('dailyCounter');
     const savedUserData = localStorage.getItem('userData');
     
+    // ========== FIX: Reset daily counter logic ==========
+    // Get today's date
+    const today = new Date().toDateString();
+    const lastResetDate = localStorage.getItem('lastResetDate');
+    
+    // Reset counter if it's a new day
+    if (lastResetDate !== today) {
+        AppState.dailyCounter = 3; // เปลี่ยนเป็น 3 เพลงต่อวันสำหรับ demo
+        localStorage.setItem('dailyCounter', AppState.dailyCounter);
+        localStorage.setItem('lastResetDate', today);
+        console.log('🔄 Daily counter reset to 3 for new day');
+    } else if (savedCounter) {
+        AppState.dailyCounter = parseInt(savedCounter);
+    } else {
+        AppState.dailyCounter = 3; // Default 3 songs per day
+        localStorage.setItem('dailyCounter', AppState.dailyCounter);
+    }
+    
     // Apply saved theme
     if (savedTheme) {
         AppState.theme = savedTheme;
         document.documentElement.setAttribute('data-theme', savedTheme);
         updateThemeIcon(savedTheme);
-    }
-    
-    // Apply daily counter
-    if (savedCounter) {
-        AppState.dailyCounter = parseInt(savedCounter);
-        updateDailyCounter();
     }
     
     // Apply user data
@@ -210,7 +222,7 @@ function initializeAppState() {
         elements.birthDate.value = maxDate.toISOString().split('T')[0];
     }
     
-    console.log('✅ App state initialized');
+    console.log('✅ App state initialized. Daily counter:', AppState.dailyCounter);
 }
 
 // ========== FORM HANDLING ==========
