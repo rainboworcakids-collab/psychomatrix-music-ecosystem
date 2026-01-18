@@ -91,9 +91,27 @@ class MusicGenerator {
         return chords;
     }
     
+    createPlayableMelody(numbers, style = 'lofi', length = 8) {
+        const scale = this.getScaleForStyle(style);
+        const melody = [];
+    
+        for (let i = 0; i < length; i++) {
+            const numIndex = i % numbers.length;
+            const noteValue = numbers[numIndex] || 1;
+            const noteIndex = noteValue % scale.length;
+        
+            // Use different octaves for variety (4-5)
+            const octave = 4 + (i % 2);
+            melody.push(scale[noteIndex] + octave);
+        }
+    
+        return melody;
+    }
+
     // สร้างเพลงที่ personal
     createPersonalizedMusic(userData) {
         console.log('🎵 Creating personalized music for:', userData);
+        
         
         try {
             // ดึงข้อมูลพื้นฐาน
@@ -134,6 +152,8 @@ class MusicGenerator {
                 generatorVersion: this.version + '-personalized'
             };
             
+            const melody = this.createPlayableMelody(seedNumbers, style, 8);
+       
             console.log('✅ Personalized music created:', result);
             return result;
             
