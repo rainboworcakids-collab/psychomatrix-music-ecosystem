@@ -275,6 +275,59 @@
                     </div>
                 </div>
             </section>
+            
+            <section id="Debug-Section" >
+                <div class="debug-actions" style="text-align: center; margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 8px;">
+                    <button onclick="resetDailyCounter()" class="debug-btn">
+                        🔄 รีเซ็ตตัวนับวัน (สำหรับทดสอบ)
+                    </button>
+                    <button onclick="testAudio()" class="debug-btn">
+                        🔊 ทดสอบเสียง
+                    </button>
+                </div>
+
+                <script>
+                    // Debug functions
+                    function resetDailyCounter() {
+                        AppState.dailyCounter = 3;
+                        localStorage.setItem('dailyCounter', AppState.dailyCounter);
+                        updateDailyCounter();
+                        showToast('รีเซ็ตตัวนับวันเป็น 3 แล้ว!', 'success');
+                        console.log('🔄 Daily counter reset to 3');
+                    }
+
+                    function testAudio() {
+                        if (window.MusicCore) {
+                            window.MusicCore.requestAudioPermission().then(success => {
+                                if (success) {
+                                    window.MusicCore.playTone(440, 0.5); // A4
+                                    showToast('เล่นเสียงทดสอบสำเร็จ (A4)', 'success');
+                                } else {
+                                    showError('ไม่ได้รับอนุญาตให้เล่นเสียง');
+                                }
+                            });
+                        }
+                    }
+                </script>
+
+                <style>
+                    .debug-btn {
+                        margin: 5px;
+                        padding: 8px 16px;
+                        background: #666;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    }
+
+                    .debug-btn:hover {
+                        background: #444;
+                    }
+                </style>
+            </section>
+            
+            
         </main>
 
         <!-- Footer -->
