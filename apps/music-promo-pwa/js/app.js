@@ -367,6 +367,7 @@ function displayMelodyNotes(melody) {
     });
 }
 
+
 // ========== PLAYER CONTROLS ==========
 function handlePlayMusic() {
     console.log('▶ Playing music...');
@@ -381,25 +382,63 @@ function handlePlayMusic() {
         return;
     }
     
-    // Update UI
-    AppState.isPlaying = true;
-    elements.playBtn.innerHTML = '<i class="fas fa-pause"></i> หยุดชั่วคราว';
-    elements.playBtn.classList.add('playing');
-    
-    // Show playback status
-    const playbackStatus = document.getElementById('playbackStatus');
-    if (playbackStatus) {
-        playbackStatus.classList.remove('hidden');
+    // Request audio permission first
+    if (window.MusicCore && window.MusicCore.requestAudioPermission) {
+        window.MusicCore.requestAudioPermission().then(success => {
+            if (success) {
+                // Play the melody
+                window.MusicCore.playMelody(AppState.currentMusic.melody, AppState.currentMusic.tempo);
+                
+                // Update UI
+                AppState.isPlaying = true;
+                elements.playBtn.innerHTML = '<i class="fas fa-pause"></i> หยุดชั่วคราว';
+                elements.playBtn.classList.add('playing');
+                
+                // Show playback status
+                const playbackStatus = document.getElementById('playbackStatus');
+                if (playbackStatus) {
+                    playbackStatus.classList.remove('hidden');
+                }
+                
+                // Start visualizer animation
+                startVisualizerAnimation();
+                
+                // Auto-stop after melody duration
+                const melodyDuration = (AppState.currentMusic.melody.length * 60 / AppState.currentMusic.tempo) * 1000;
+                setTimeout(() => {
+                    if (AppState.isPlaying) {
+                        handleStopMusic();
+                    }
+                }, melodyDuration);
+                
+                showToast('กำลังเล่นเพลง...', 'info');
+                
+            } else {
+                showError('ไม่ได้รับอนุญาตให้เล่นเสียง กรุณาคลิกที่ปุ่มเล่นอีกครั้ง');
+            }
+        });
+    } else {
+        // Fallback to simple note
+        if (AppState.currentMusic.melody && AppState.currentMusic.melody.length > 0) {
+            const frequency = window.MusicCore.noteToFrequency(AppState.currentMusic.melody[0]);
+            window.MusicCore.playTone(frequency, 1);
+            
+            // Update UI
+            AppState.isPlaying = true;
+            elements.playBtn.innerHTML = '<i class="fas fa-pause"></i> หยุดชั่วคราว';
+            elements.playBtn.classList.add('playing');
+            
+            // Show playback status
+            const playbackStatus = document.getElementById('playbackStatus');
+            if (playbackStatus) {
+                playbackStatus.classList.remove('hidden');
+            }
+            
+            showToast('กำลังเล่นโน้ตแรก...', 'info');
+        }
     }
-    
-    // Start visualizer animation
-    startVisualizerAnimation();
-    
-    // Simulate audio playback
-    console.log('🎧 Playing:', AppState.currentMusic.title);
-    
-    showToast('กำลังเล่นเพลง...', 'info');
 }
+
 
 function handleStopMusic() {
     console.log('⏹ Stopping music...');
@@ -413,6 +452,11 @@ function handleStopMusic() {
     const playbackStatus = document.getElementById('playbackStatus');
     if (playbackStatus) {
         playbackStatus.classList.add('hidden');
+    }
+    
+    // Stop audio
+    if (window.MusicCore && window.MusicCore.stopAudio) {
+        window.MusicCore.stopAudio();
     }
     
     // Stop visualizer animation
