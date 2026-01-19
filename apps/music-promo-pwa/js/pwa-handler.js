@@ -89,33 +89,36 @@ class PWAHandler {
     
     async install() {
         console.log('📱 PWAHandler.install() called');
-        
-        if (!this.deferredPrompt) {
+    
+        // ตรวจสอบทั้งตัวแปรใน Class และตัวแปร Global
+        const promptEvent = this.deferredPrompt || window.deferredPrompt;
+    
+        if (!promptEvent) {
             console.warn('⚠️ No deferred prompt available');
-            return { success: false, message: 'ไม่สามารถติดตั้งได้ในขณะนี้' };
+            // ลองแจ้งเตือนให้ผู้ใช้ทราบว่าต้องติดตั้งผ่านเมนู Browser
+            alert('กรุณาติดตั้งผ่านเมนู "เพิ่มลงในหน้าจอหลัก" ของ Chrome');
+            return { success: false };
         }
-        
+    
         try {
-            // Show the install prompt
-            this.deferredPrompt.prompt();
-            
-            // Wait for the user to respond
-            const { outcome } = await this.deferredPrompt.userChoice;
-            
+            // เรียกหน้าต่างติดตั้งของระบบ
+            await promptEvent.prompt();
+        
+            const { outcome } = await promptEvent.userChoice;
             console.log(`User response: ${outcome}`);
-            
-            if (outcome === 'accepted') {
-                console.log('✅ User accepted installation');
-                return { success: true, message: 'กำลังติดตั้งแอป...' };
-            } else {
-                console.log('❌ User declined installation');
-                return { success: false, message: 'ยกเลิกการติดตั้ง' };
-            }
+        
+            // สำคัญ: prompt ใช้ได้ครั้งเดียว ต้องล้างค่าทิ้ง
+            this.deferredPrompt = null;
+            window.deferredPrompt = null;
+            this.hideInstallUI();
+        
+            return { success: outcome === 'accepted' };
         } catch (error) {
             console.error('❌ Installation error:', error);
-            return { success: false, message: 'เกิดข้อผิดพลาดในการติดตั้ง' };
+            return { success: false };
         }
     }
+
     
     simulateInstallPrompt() {
         console.log('🧪 Simulating install prompt...');
