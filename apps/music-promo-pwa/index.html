@@ -22,7 +22,29 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Sarabun:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- เพิ่ม meta tags สำหรับ PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Psychomatrix Music">
+    
+    <!-- สำหรับ iOS -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- สำหรับ Android -->
+    <meta name="application-name" content="Psychomatrix Music">
+    <meta name="msapplication-TileColor" content="#4f46e5">
+    <meta name="msapplication-starturl" content="/">
+    
+    <!-- Open Graph สำหรับแชร์ -->
+    <meta property="og:title" content="Psychomatrix Music Creator">
+    <meta property="og:description" content="สร้างเพลงส่วนตัวจากตัวเลขวันเกิดและชื่อของคุณ">
+    <meta property="og:image" content="https://rainboworcakids-collab.github.io/psychomatrix-music-ecosystem/apps/music-promo-pwa/assets/logo.png">
+    <meta property="og:url" content="https://rainboworcakids-collab.github.io/psychomatrix-music-ecosystem/apps/music-promo-pwa/">
+    <meta property="og:type" content="website">
 </head>
+
 <body>
     <!-- Install PWA Banner -->
     <div id="installBanner" class="install-banner">
@@ -276,58 +298,58 @@
                 </div>
             </section>
             
-            <section id="Debug-Section" >
-                <div class="debug-actions" style="text-align: center; margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 8px;">
-                    <button onclick="resetDailyCounter()" class="debug-btn">
-                        🔄 รีเซ็ตตัวนับวัน (สำหรับทดสอบ)
-                    </button>
-                    <button onclick="testAudio()" class="debug-btn">
-                        🔊 ทดสอบเสียง
-                    </button>
+            <!-- Debug Section for Testing -->
+            <section id="Debug-Section">
+                <div class="card debug-card">
+                    <h3 class="card-title">
+                        <i class="fas fa-bug"></i> เครื่องมือทดสอบสำหรับนักพัฒนา
+                    </h3>
+                    
+                    <div class="debug-actions">
+                        <button onclick="resetDailyCounter()" class="debug-btn">
+                            🔄 รีเซ็ตตัวนับวัน (สำหรับทดสอบ)
+                        </button>
+                        <button onclick="testAudio()" class="debug-btn">
+                            🔊 ทดสอบเสียง
+                        </button>
+                        <button onclick="simulateInstallPrompt()" class="debug-btn">
+                            📲 จำลอง Install Prompt
+                        </button>
+                        <button onclick="clearAllData()" class="debug-btn">
+                            🗑️ ล้างข้อมูลทั้งหมด
+                        </button>
+                        <button onclick="togglePWADebug()" class="debug-btn">
+                            🐛 เปิด/ปิด PWA Debug Panel
+                        </button>
+                        <button onclick="testPWAInstall()" class="debug-btn">
+                            🧪 ทดสอบ PWA Install
+                        </button>
+
+                    </div>
+                    
+                    <div class="debug-status">
+                        <h4>สถานะระบบ:</h4>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="status-label">ตัวนับวัน:</span>
+                                <span id="debugDailyCounter" class="status-value">-</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Audio Context:</span>
+                                <span id="debugAudioStatus" class="status-value">-</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Service Worker:</span>
+                                <span id="debugSWStatus" class="status-value">-</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">PWA Installable:</span>
+                                <span id="debugPWAStatus" class="status-value">-</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <script>
-                    // Debug functions
-                    function resetDailyCounter() {
-                        AppState.dailyCounter = 3;
-                        localStorage.setItem('dailyCounter', AppState.dailyCounter);
-                        updateDailyCounter();
-                        showToast('รีเซ็ตตัวนับวันเป็น 3 แล้ว!', 'success');
-                        console.log('🔄 Daily counter reset to 3');
-                    }
-
-                    function testAudio() {
-                        if (window.MusicCore) {
-                            window.MusicCore.requestAudioPermission().then(success => {
-                                if (success) {
-                                    window.MusicCore.playTone(440, 0.5); // A4
-                                    showToast('เล่นเสียงทดสอบสำเร็จ (A4)', 'success');
-                                } else {
-                                    showError('ไม่ได้รับอนุญาตให้เล่นเสียง');
-                                }
-                            });
-                        }
-                    }
-                </script>
-
-                <style>
-                    .debug-btn {
-                        margin: 5px;
-                        padding: 8px 16px;
-                        background: #666;
-                        color: white;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    }
-
-                    .debug-btn:hover {
-                        background: #444;
-                    }
-                </style>
             </section>
-            
-            
         </main>
 
         <!-- Footer -->
@@ -372,16 +394,214 @@
         <span id="errorMessage">เกิดข้อผิดพลาด</span>
     </div>
 
+    <!-- PWA Debug Panel -->
+    <div id="pwaDebugPanel" class="pwa-debug-panel">
+        <div class="debug-header">
+            <h4>🔧 PWA Debug Panel</h4>
+            <button onclick="togglePWADebug()" class="debug-close">×</button>
+        </div>
+        <div class="debug-content">
+            <div class="debug-section">
+                <h5>📱 Installation Status</h5>
+                <div id="pwaStatus"></div>
+            </div>
+            <div class="debug-section">
+                <h5>🔧 Debug Tools</h5>
+                <button onclick="testInstallPrompt()" class="debug-btn">
+                    🧪 Test Install Prompt
+                </button>
+                <button onclick="clearPWAStorage()" class="debug-btn">
+                    🗑️ Clear PWA Data
+                </button>
+                <button onclick="showInstallPrompt()" class="debug-btn">
+                    📲 Force Show Install
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ปุ่มเปิด Debug Panel -->
+    <button onclick="togglePWADebug()" class="debug-toggle-btn">
+        🐛
+    </button>
+
     <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/music-core.js"></script>
     <script src="js/music-generator.js"></script>
     <script src="js/pwa-handler.js"></script>
     
-    <!-- Initialize PWA -->
+    <!-- Debug Functions -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+        // ========== DEBUG FUNCTIONS ==========
+        function resetDailyCounter() {
+            if (window.AppState) {
+                window.AppState.dailyCounter = 3;
+                localStorage.setItem('dailyCounter', window.AppState.dailyCounter);
+                if (window.updateDailyCounter) {
+                    window.updateDailyCounter();
+                }
+                if (window.showToast) {
+                    window.showToast('รีเซ็ตตัวนับวันเป็น 3 แล้ว!', 'success');
+                }
+            }
+        }
+
+        function testAudio() {
+            if (window.MusicCore && window.MusicCore.requestAudioPermission) {
+                window.MusicCore.requestAudioPermission().then(success => {
+                    if (success) {
+                        window.MusicCore.playTone(440, 0.5);
+                        if (window.showToast) {
+                            window.showToast('เล่นเสียงทดสอบสำเร็จ (A4)', 'success');
+                        }
+                    } else {
+                        if (window.showError) {
+                            window.showError('ไม่ได้รับอนุญาตให้เล่นเสียง');
+                        }
+                    }
+                });
+            } else {
+                if (window.showError) {
+                    window.showError('MusicCore module ไม่พร้อมใช้งาน');
+                }
+            }
+        }
+
+        function simulateInstallPrompt() {
+            console.log('🧪 Simulating install prompt...');
+            if (window.PWAHandler && window.PWAHandler.simulateInstallPrompt) {
+                window.PWAHandler.simulateInstallPrompt();
+            } else if (window.simulateInstallPrompt) {
+                window.simulateInstallPrompt();
+            } else {
+                alert('ฟังก์ชัน simulateInstallPrompt ไม่พร้อมใช้งาน');
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('ต้องการล้างข้อมูลทั้งหมดของแอปใช่หรือไม่?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(registration => {
+                            registration.unregister();
+                        });
+                    });
+                }
+                
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+                
+                alert('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว กำลังรีโหลดหน้า...');
+            }
+        }
+
+        function togglePWADebug() {
+            const panel = document.getElementById('pwaDebugPanel');
+            if (panel) {
+                panel.classList.toggle('show');
+                updatePWAStatus();
+            }
+        }
+
+        function updatePWAStatus() {
+            const statusDiv = document.getElementById('pwaStatus');
+            if (!statusDiv) return;
+            
+            const status = {
+                deferredPrompt: !!window.deferredPrompt,
+                isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+                pwaInstalled: localStorage.getItem('pwa_installed'),
+                hideBanner: localStorage.getItem('hideInstallBanner'),
+                userAgent: navigator.userAgent.substring(0, 50)
+            };
+            
+            statusDiv.textContent = JSON.stringify(status, null, 2);
+        }
+
+        function testInstallPrompt() {
+            console.log('🧪 Testing install prompt...');
+            if (window.PWAHandler && window.PWAHandler.simulateInstallPrompt) {
+                window.PWAHandler.simulateInstallPrompt();
+            } else {
+                console.log('No PWAHandler available');
+            }
+        }
+
+        function clearPWAStorage() {
+            if (confirm('ล้างข้อมูล PWA ทั้งหมด?')) {
+                localStorage.removeItem('pwa_installed');
+                localStorage.removeItem('hideInstallBanner');
+                localStorage.removeItem('pwa_install_date');
+                alert('ล้างข้อมูลเรียบร้อยแล้ว');
+            }
+        }
+
+        function showInstallPrompt() {
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+            } else if (window.PWAHandler && window.PWAHandler.install) {
+                window.PWAHandler.install();
+            } else {
+                alert('ไม่มี install prompt พร้อมใช้งาน');
+            }
+        }
+        
+        function testPWAInstall() {
+            console.log('🧪 Testing PWA installation...');
+    
+            // 1. ล้างค่า localStorage ที่ซ่อน banner
+            localStorage.removeItem('hideInstallBanner');
+            localStorage.removeItem('pwa_installed');
+    
+            // 2. สร้าง mock deferred prompt ถ้ายังไม่มี
+            if (!window.deferredPrompt) {
+                console.log('Creating mock deferred prompt...');
+                // เรียกใช้ simulateInstallPrompt ที่มีอยู่
+                if (typeof window.simulateInstallPrompt === 'function') {
+                    window.simulateInstallPrompt();
+                } else if (window.PWAHandler && window.PWAHandler.simulateInstallPrompt) {
+                    window.PWAHandler.simulateInstallPrompt();
+                } else {
+                    alert('ไม่พบฟังก์ชัน simulateInstallPrompt');
+                    return;
+                }
+            }
+    
+            // 3. แสดง banner และปุ่ม
+            const banner = document.getElementById('installBanner');
+            const installBtn = document.getElementById('installBtn');
+    
+            if (banner) {
+                banner.classList.add('show');
+            }
+    
+            if (installBtn) {
+                installBtn.style.display = 'flex';
+            }
+    
+            // 4. อัพเดทสถานะ
+            if (typeof updatePWAStatus === 'function') {
+                updatePWAStatus();
+            }
+    
+            // 5. แสดงข้อความ
+            if (typeof showToast === 'function') {
+                showToast('PWA installation test ready! Click install buttons', 'info');
+            } else {
+                alert('PWA installation test ready! Click install buttons');
+            }
+        }
+
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Register service worker
+            if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('service-worker.js')
                     .then(registration => {
                         console.log('ServiceWorker registered:', registration);
@@ -389,8 +609,204 @@
                     .catch(error => {
                         console.log('ServiceWorker registration failed:', error);
                     });
-            });
-        }
+            }
+        });
+        
     </script>
+
+    <!-- Additional Styles for Debug Section -->
+    <style>
+        /* Debug Section Styles */
+        .debug-card {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            color: white;
+            border: 2px solid #4f46e5;
+        }
+        
+        .debug-card .card-title {
+            color: #fbbf24;
+        }
+        
+        .debug-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .debug-btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .debug-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+        
+        .debug-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #9ca3af;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #fbbf24;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* PWA Debug Panel Styles */
+        .pwa-debug-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: #1f2937;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9998;
+            display: none;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        .pwa-debug-panel.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #374151;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .debug-header h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .debug-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .debug-content {
+            padding: 16px;
+        }
+
+        .debug-section {
+            margin-bottom: 16px;
+        }
+
+        .debug-section h5 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #pwaStatus {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            background: #111827;
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        /* ปุ่มเปิด Debug Panel */
+        .debug-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 9997;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .debug-toggle-btn:hover {
+            background: #4338ca;
+            transform: scale(1.1);
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .debug-actions {
+                flex-direction: column;
+            }
+            
+            .debug-btn {
+                min-width: 100%;
+            }
+            
+            .pwa-debug-panel {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </body>
 </html>

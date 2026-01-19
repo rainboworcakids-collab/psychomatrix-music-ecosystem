@@ -1,7 +1,7 @@
 {
-  "name": "Psychomatrix Music Creator",
-  "short_name": "Psychomatrix Music",
-  "description": "สร้างเพลงส่วนตัวจากตัวเลขวันเกิดและชื่อของคุณ",
+  "name": "Psychomatrix Music",
+  "short_name": "Psychomatrix",
+  "description": "สร้างเพลงส่วนตัวจากตัวเลขชีวิตของคุณ",
   "lang": "th",
   "dir": "ltr",
   "theme_color": "#4f46e5",
@@ -12,102 +12,74 @@
   "start_url": "/",
   "icons": [
     {
-      "src": "icons/icon-72x72.png",
+      "src": "./icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-96x96.png",
+      "src": "./icons/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-128x128.png",
+      "src": "./icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-144x144.png",
+      "src": "./icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-152x152.png",
+      "src": "./icons/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-192x192.png",
+      "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-384x384.png",
+      "src": "./icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "assets/screenshot1.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "หน้าจอสร้างเพลง"
-    },
-    {
-      "src": "assets/screenshot2.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "ผลลัพธ์เพลงบนมือถือ"
-    }
-  ],
-  "categories": [
-    "music",
-    "entertainment",
-    "lifestyle",
-    "health"
-  ],
+  "screenshots": [],
+  "categories": ["entertainment", "music", "lifestyle"],
   "shortcuts": [
     {
       "name": "สร้างเพลงใหม่",
       "short_name": "สร้างเพลง",
       "description": "สร้างเพลงใหม่จากข้อมูลของคุณ",
-      "url": "/?action=create",
+      "url": "/?create",
       "icons": [
         {
-          "src": "icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "ดูเพลงของฉัน",
-      "short_name": "เพลงของฉัน",
-      "description": "ดูเพลงที่คุณสร้างไว้",
-      "url": "/?action=my-music",
-      "icons": [
-        {
-          "src": "icons/icon-96x96.png",
+          "src": "./icons/icon-96x96.png",
           "sizes": "96x96"
         }
       ]
     }
   ],
   "related_applications": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "id": "/",
+  "launch_handler": {
+    "client_mode": "auto"
+  }
 }
