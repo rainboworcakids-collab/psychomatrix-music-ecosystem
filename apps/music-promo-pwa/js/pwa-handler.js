@@ -87,34 +87,46 @@ class PWAHandler {
         }
     }
     
+    
     async install() {
         console.log('📱 PWAHandler.install() called');
-    
-        // ตรวจสอบทั้งตัวแปรใน Class และตัวแปร Global
+
+        // 1. ดึง Event ออกมา (เช็คทั้งใน Class และ Global)
         const promptEvent = this.deferredPrompt || window.deferredPrompt;
-    
+
         if (!promptEvent) {
             console.warn('⚠️ No deferred prompt available');
-            // ลองแจ้งเตือนให้ผู้ใช้ทราบว่าต้องติดตั้งผ่านเมนู Browser
-            alert('กรุณาติดตั้งผ่านเมนู "เพิ่มลงในหน้าจอหลัก" ของ Chrome');
+            // ถ้าไม่มี Event แสดงว่า Browser ยังไม่พร้อม หรือติดตั้งไปแล้ว
+            alert('ระบบยังไม่พร้อมติดตั้ง หรือคุณได้ติดตั้งแอปนี้ไปแล้ว\nหากยังไม่มีแอป ให้เลือกเมนู "เพิ่มลงในหน้าจอหลัก" ใน Chrome');
             return { success: false };
         }
-    
+
         try {
-            // เรียกหน้าต่างติดตั้งของระบบ
+            // 2. เรียก Native Prompt (หน้าต่างระบบ)
             await promptEvent.prompt();
-        
+            console.log('🔔 Native prompt shown to user');
+
+            // 3. รอคำตอบจากผู้ใช้ (ยอมรับ/ปฏิเสธ)
             const { outcome } = await promptEvent.userChoice;
-            console.log(`User response: ${outcome}`);
-        
-            // สำคัญ: prompt ใช้ได้ครั้งเดียว ต้องล้างค่าทิ้ง
+            console.log(`👤 User choice: ${outcome}`);
+
+            // 4. สำคัญมาก: ล้างค่าทิ้งทันทีไม่ว่าผู้ใช้จะเลือกอะไร 
+            // เพราะ Event เดิมจะใช้งานซ้ำไม่ได้อีก (Expired)
             this.deferredPrompt = null;
             window.deferredPrompt = null;
-            this.hideInstallUI();
         
-            return { success: outcome === 'accepted' };
+            // 5. ซ่อนปุ่มติดตั้งในหน้าเว็บ
+            this.hideInstallUI();
+
+            if (outcome === 'accepted') {
+                console.log('✅ User accepted the install');
+                return { success: true };
+            } else {
+                console.log('❌ User dismissed the install');
+                return { success: false };
+            }
         } catch (error) {
-            console.error('❌ Installation error:', error);
+            console.error('❌ Critical Installation error:', error);
             return { success: false };
         }
     }
