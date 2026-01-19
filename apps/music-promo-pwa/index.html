@@ -613,14 +613,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Register service worker
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('service-worker.js', {scope: './'})
-                    .then(registration => {
-                        console.log('ServiceWorker registered:', registration);
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed:', error);
-                    });
+                window.addEventListener('load', () => {
+                    // ระบุ scope เป็น './' เพื่อให้คุมเฉพาะ sub-app นี้
+                    navigator.serviceWorker.register('./service-worker.js', { scope: './' })
+                    .then(reg => console.log('✅ SW Registered:', reg.scope))
+                    .catch(err => console.error('❌ SW Failed:', err));
+                });
             }
+
+            
         });
         
     </script>
