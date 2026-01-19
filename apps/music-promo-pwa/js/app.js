@@ -1,11 +1,11 @@
 // app.js - ไฟล์หลักสำหรับ Psychomatrix Music PWA
-console.log('🎵 Psychomatrix Music PWA v1.0 - Starting...');
+console.log('🎵 Psychomatrix Music PWA - Starting...');
 
 // ========== GLOBAL STATE ==========
 window.AppState = {
     isPlaying: false,
     currentMusic: null,
-    dailyCounter: 1,
+    dailyCounter: 3,
     userData: null,
     theme: 'light'
 };
@@ -41,6 +41,7 @@ const elements = {
     themeToggle: null,
     installBtn: null,
     installBanner: null,
+    installButton: null,
     loadingModal: null,
     successToast: null,
     errorToast: null
@@ -60,8 +61,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize app state
         initializeAppState();
         
-        // Check PWA installation
-        checkPWAInstallation();
+        // Initialize PWA
+        initializePWA();
         
         console.log('✅ App initialized successfully');
         
@@ -108,6 +109,7 @@ function initializeElements() {
     elements.themeToggle = document.getElementById('themeToggle');
     elements.installBtn = document.getElementById('installBtn');
     elements.installBanner = document.getElementById('installBanner');
+    elements.installButton = document.getElementById('installButton');
     elements.loadingModal = document.getElementById('loadingModal');
     elements.successToast = document.getElementById('successToast');
     elements.errorToast = document.getElementById('errorToast');
@@ -141,16 +143,25 @@ function initializeEventListeners() {
         elements.themeToggle.addEventListener('click', toggleTheme);
     }
     
-    // Install buttons
+    // Install buttons (สองตำแหน่ง)
     if (elements.installBtn) {
+        console.log('🔧 Adding install listener to header button');
         elements.installBtn.addEventListener('click', handleInstall);
+    }
+    
+    if (elements.installButton) {
+        console.log('🔧 Adding install listener to banner button');
+        elements.installButton.addEventListener('click', handleInstall);
     }
     
     // Dismiss install banner
     const dismissBanner = document.getElementById('dismissBanner');
     if (dismissBanner) {
         dismissBanner.addEventListener('click', () => {
-            elements.installBanner.classList.remove('show');
+            if (elements.installBanner) {
+                elements.installBanner.classList.remove('show');
+                localStorage.setItem('hideInstallBanner', 'true');
+            }
         });
     }
     
@@ -183,21 +194,20 @@ function initializeAppState() {
     const savedCounter = localStorage.getItem('dailyCounter');
     const savedUserData = localStorage.getItem('userData');
     
-    // ========== FIX: Reset daily counter logic ==========
     // Get today's date
     const today = new Date().toDateString();
     const lastResetDate = localStorage.getItem('lastResetDate');
     
     // Reset counter if it's a new day
     if (lastResetDate !== today) {
-        AppState.dailyCounter = 3; // เปลี่ยนเป็น 3 เพลงต่อวันสำหรับ demo
+        AppState.dailyCounter = 3;
         localStorage.setItem('dailyCounter', AppState.dailyCounter);
         localStorage.setItem('lastResetDate', today);
         console.log('🔄 Daily counter reset to 3 for new day');
     } else if (savedCounter) {
         AppState.dailyCounter = parseInt(savedCounter);
     } else {
-        AppState.dailyCounter = 3; // Default 3 songs per day
+        AppState.dailyCounter = 3;
         localStorage.setItem('dailyCounter', AppState.dailyCounter);
     }
     
@@ -222,26 +232,250 @@ function initializeAppState() {
         elements.birthDate.value = maxDate.toISOString().split('T')[0];
     }
     
-     // ========== FIX: Check PWA installation status ==========
-    setTimeout(() => {
-        if (window.PWAHandler) {
-            console.log('📱 PWA Handler status:', window.PWAHandler.debugInfo());
-            
-            // Check if install prompt should be shown
-            if (!window.PWAHandler.getInstallationStatus() && window.deferredPrompt) {
-                console.log('📱 Install prompt is available');
-                window.PWAHandler.showInstallUI();
-            }
-        }
-        
-        // Update debug panel
-        if (typeof updatePWAStatus === 'function') {
-            updatePWAStatus();
-        }
-    }, 1000);
-    
     console.log('✅ App state initialized');
 }
+
+function initializePWA() {
+    console.log('📱 Initializing PWA features...');
+    
+    // Check if install banner should be shown
+    const hideBanner = localStorage.getItem('hideInstallBanner');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (!hideBanner && !isStandalone && elements.installBanner) {
+        // Show banner after delay
+        setTimeout(() => {
+            elements.installBanner.classList.add('show');
+        }, 3000);
+    }
+    
+    // Initialize service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+            .then(registration => {
+                console.log('✅ Service Worker registered:', registration.scope);
+            })
+            .catch(error => {
+                console.error('❌ Service Worker registration failed:', error);
+            });
+    }
+}
+
+// ========== PWA INSTALLATION ==========
+window.deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('📱 beforeinstallprompt event fired');
+    
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    
+    // Stash the event so it can be triggered later
+    window.deferredPrompt = e;
+    
+    // Update UI to show install buttons
+    if (elements.installBtn) {
+        elements.installBtn.style.display = 'flex';
+    }
+    
+    if (elements.installBanner) {
+        elements.installBanner.classList.add('show');
+    }
+    
+    console.log('✅ Deferred prompt saved');
+});
+
+window.addEventListener('appinstalled', (evt) => {
+    console.log('🎉 PWA installed successfully');
+    window.deferredPrompt = null;
+    
+    // Hide install banner
+    if (elements.installBanner) {
+        elements.installBanner.classList.remove('show');
+    }
+    
+    // Save install status
+    localStorage.setItem('pwa_installed', 'true');
+    localStorage.setItem('pwa_install_date', new Date().toISOString());
+    
+    // Show success message
+    showToast('ติดตั้งแอปสำเร็จ!', 'success');
+});
+
+async function handleInstall() {
+    console.log('📲 handleInstall() called');
+    console.log('deferredPrompt exists:', !!window.deferredPrompt);
+    
+    if (!window.deferredPrompt) {
+        console.warn('⚠️ No deferred prompt available');
+        showError('ไม่พบปุ่มติดตั้งแอป กรุณาคลิก "จำลอง Install Prompt" ก่อน');
+        return;
+    }
+    
+    // ตรวจสอบว่าเป็น mock object หรือไม่
+    if (window.deferredPrompt._isMock) {
+        console.log('📱 Using mock installation flow');
+        
+        try {
+            // เรียกใช้ mock prompt
+            console.log('📲 Calling mock prompt...');
+            const result = await window.deferredPrompt.prompt();
+            console.log('✅ Mock installation result:', result);
+            
+            // ไม่ต้องทำอะไรเพิ่มเติม เพราะ mock prompt จะจัดการเอง
+            return;
+            
+        } catch (error) {
+            console.error('❌ Error in mock installation:', error);
+            
+            // ถ้า mock prompt ไม่ทำงาน ให้ใช้ manual fallback
+            simulateMockInstallation();
+        }
+    } else {
+        // กรณีเป็น real PWA installation
+        try {
+            console.log('📲 Calling real deferredPrompt.prompt()...');
+            const result = await window.deferredPrompt.prompt();
+            console.log('📲 User responded:', result);
+            
+            if (result.outcome === 'accepted') {
+                console.log('✅ User accepted installation');
+                showToast('กำลังติดตั้งแอป...', 'success');
+            } else {
+                console.log('❌ User dismissed installation');
+                showToast('ยกเลิกการติดตั้ง', 'info');
+            }
+            
+            window.deferredPrompt = null;
+            
+        } catch (error) {
+            console.error('❌ Error during installation:', error);
+            showError('เกิดข้อผิดพลาดในการติดตั้ง: ' + error.message);
+            showManualInstallInstructions();
+        }
+    }
+}
+
+// เพิ่มฟังก์ชันช่วยสำหรับ simulate การติดตั้ง
+function simulateMockInstallation() {
+    console.log('🔄 Simulating mock installation...');
+    
+    // Update localStorage
+    localStorage.setItem('pwa_installed', 'true');
+    localStorage.setItem('pwa_install_date', new Date().toISOString());
+    
+    // Hide install UI
+    if (elements.installBanner) {
+        elements.installBanner.classList.remove('show');
+        localStorage.setItem('hideInstallBanner', 'true');
+    }
+    
+    if (elements.installBtn) {
+        elements.installBtn.style.display = 'none';
+    }
+    
+    // Show success message
+    showToast('ติดตั้งแอปจำลองสำเร็จ!', 'success');
+    
+    // Update debug panel
+    if (typeof updatePWAStatus === 'function') {
+        updatePWAStatus();
+    }
+    
+    console.log('✅ Mock installation completed');
+}
+
+function showManualInstallInstructions() {
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    let message = '';
+    
+    if (isiOS) {
+        message = 'สำหรับ iOS: แตะปุ่ม Share (📤) แล้วเลือก "เพิ่มไปที่หน้าจอหลัก"';
+    } else if (isAndroid) {
+        message = 'สำหรับ Android: แตะเมนู (⋮) แล้วเลือก "ติดตั้งแอป" หรือ "เพิ่มไปที่หน้าจอหลัก"';
+    } else {
+        message = 'สำหรับเดสก์ท็อป: คลิกที่ปุ่มติดตั้งแอป (📥) ในแถบที่อยู่หรือเมนูเบราว์เซอร์';
+    }
+    
+    showToast(message, 'info', 5000);
+}
+
+// ========== SIMULATE INSTALL PROMPT ==========
+window.simulateInstallPrompt = function() {
+    console.log('🧪 Simulating install prompt...');
+    
+    // สร้าง mock deferred prompt
+    const mockPrompt = {
+        preventDefault: () => console.log('Mock: preventDefault()'),
+        prompt: () => {
+            console.log('Mock: prompt() called');
+            
+            // Simulate installation after 1 second
+            setTimeout(() => {
+                console.log('🎉 Mock: App installed!');
+                const installedEvent = new Event('appinstalled');
+                window.dispatchEvent(installedEvent);
+                
+                // Update localStorage
+                localStorage.setItem('pwa_installed', 'true');
+                localStorage.setItem('pwa_install_date', new Date().toISOString());
+                
+                // Hide install UI
+                const banner = document.getElementById('installBanner');
+                const installBtn = document.getElementById('installBtn');
+                
+                if (banner) {
+                    banner.classList.remove('show');
+                    localStorage.setItem('hideInstallBanner', 'true');
+                }
+                if (installBtn) {
+                    installBtn.style.display = 'none';
+                }
+                
+                // Show success message
+                if (typeof showToast === 'function') {
+                    showToast('ติดตั้งแอปจำลองสำเร็จ!', 'success');
+                }
+            }, 1000);
+            
+            return Promise.resolve({ outcome: 'accepted' });
+        },
+        userChoice: Promise.resolve({ outcome: 'accepted' }),
+        _isMock: true  // ตัวบ่งชี้ว่าเป็น mock object
+    };
+    
+    // Store it
+    window.deferredPrompt = mockPrompt;
+    
+    // Show install UI
+    const banner = document.getElementById('installBanner');
+    const installBtn = document.getElementById('installBtn');
+    
+    if (banner) {
+        banner.classList.add('show');
+        localStorage.removeItem('hideInstallBanner'); // ล้างค่าเพื่อให้แสดง banner
+    }
+    
+    if (installBtn) {
+        installBtn.style.display = 'flex';
+    }
+    
+    console.log('✅ Mock deferred prompt created');
+    
+    // Show toast
+    if (typeof showToast === 'function') {
+        showToast('สร้าง Install Prompt จำลองสำเร็จ!', 'success');
+    }
+    
+    // Update debug panel
+    if (typeof updatePWAStatus === 'function') {
+        updatePWAStatus();
+    }
+    
+    return mockPrompt;
+};
 
 // ========== FORM HANDLING ==========
 async function handleFormSubmit(event) {
@@ -319,8 +553,6 @@ function validateForm() {
 async function generateMusic(formData) {
     console.log('🎵 Generating music...');
     
-    // This function will call the music generator
-    // For now, return mock data
     return {
         title: `เพลงของ ${formData.fullName.split(' ')[0]}`,
         key: 'Am',
@@ -384,7 +616,6 @@ function displayMelodyNotes(melody) {
         elements.melodyNotes.appendChild(noteElement);
     });
 }
-
 
 // ========== PLAYER CONTROLS ==========
 function handlePlayMusic() {
@@ -456,7 +687,6 @@ function handlePlayMusic() {
         }
     }
 }
-
 
 function handleStopMusic() {
     console.log('⏹ Stopping music...');
@@ -623,58 +853,6 @@ function updateThemeIcon(theme) {
     }
 }
 
-// ========== PWA INSTALLATION ==========
-function checkPWAInstallation() {
-    // Check if app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        console.log('📱 App is installed as PWA');
-        return;
-    }
-    
-    // Show install banner after delay
-    setTimeout(() => {
-        if (elements.installBanner) {
-            elements.installBanner.classList.add('show');
-        }
-    }, 3000);
-}
-
-async function handleInstall() {
-    console.log('📲 Installing PWA...');
-    
-    // Check if beforeinstallprompt is supported
-    if (window.deferredPrompt) {
-        try {
-            // Show install prompt
-            window.deferredPrompt.prompt();
-            
-            // Wait for user response
-            const { outcome } = await window.deferredPrompt.userChoice;
-            
-            if (outcome === 'accepted') {
-                console.log('✅ User accepted install');
-                showToast('กำลังติดตั้งแอป...', 'success');
-            } else {
-                console.log('❌ User declined install');
-            }
-            
-            // Clear the deferred prompt
-            window.deferredPrompt = null;
-            
-            // Hide banner
-            if (elements.installBanner) {
-                elements.installBanner.classList.remove('show');
-            }
-            
-        } catch (error) {
-            console.error('❌ Install failed:', error);
-            showError('ไม่สามารถติดตั้งแอปได้');
-        }
-    } else {
-        showError('เบราว์เซอร์นี้ไม่รองรับการติดตั้งแอป');
-    }
-}
-
 // ========== UPGRADE HANDLING ==========
 function handleUpgrade(event) {
     const tier = event.target.closest('.pricing-tier');
@@ -705,7 +883,7 @@ function hideLoading() {
     elements.loadingModal.classList.add('hidden');
 }
 
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', duration = 3000) {
     if (!elements.successToast || !elements.errorToast) return;
     
     const toast = type === 'error' ? elements.errorToast : elements.successToast;
@@ -717,10 +895,10 @@ function showToast(message, type = 'success') {
     
     toast.classList.add('show');
     
-    // Auto hide after 3 seconds
+    // Auto hide after duration
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, duration);
 }
 
 function showError(message) {
@@ -732,71 +910,21 @@ function updateDailyCounter() {
     elements.dailyCounter.textContent = AppState.dailyCounter;
 }
 
-// ========== SERVICE WORKER REGISTRATION ==========
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-            .then(registration => {
-                console.log('✅ Service Worker registered:', registration);
-            })
-            .catch(error => {
-                console.error('❌ Service Worker registration failed:', error);
-            });
-    });
+// ========== EXPORT FOR DEBUGGING ==========
+window.showToast = showToast;
+window.showError = showError;
+window.updateDailyCounter = updateDailyCounter;
+
+console.log('🎵 Psychomatrix Music PWA - Ready!');
+
+// ========== PWA DEBUG FUNCTIONS ==========
+function showPWAStatus() {
+    console.log('📱 PWA Status:');
+    console.log('- deferredPrompt:', !!window.deferredPrompt);
+    console.log('- isStandalone:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('- localStorage pwa_installed:', localStorage.getItem('pwa_installed'));
+    console.log('- userAgent:', navigator.userAgent);
 }
 
-// ========== BEFORE INSTALL PROMPT ==========
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (event) => {
-    console.log('📱 Before install prompt fired');
-    
-    // Prevent Chrome 67 and earlier from automatically showing the prompt
-    event.preventDefault();
-    
-    // Stash the event so it can be triggered later
-    deferredPrompt = event;
-    
-    // Update UI to show install button
-    if (elements.installBtn) {
-        elements.installBtn.style.display = 'flex';
-    }
-    
-    // Show install banner
-    if (elements.installBanner) {
-        elements.installBanner.classList.add('show');
-    }
-});
-
-// ========== APP VISIBILITY ==========
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        console.log('👁️ App is now visible');
-        // App came to foreground
-    } else {
-        console.log('👁️ App is now hidden');
-        // App went to background
-    }
-});
-
-// ========== ERROR HANDLING ==========
-window.addEventListener('error', (event) => {
-    console.error('🚨 Global error:', event.error);
-    showError('เกิดข้อผิดพลาดในระบบ');
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-    console.error('🚨 Unhandled promise rejection:', event.reason);
-    showError('เกิดข้อผิดพลาดในระบบ');
-});
-
-// ========== EXPORT FOR DEBUGGING ==========
-window.AppDebug = {
-    state: AppState,
-    elements: elements,
-    showToast,
-    showError,
-    toggleTheme
-};
-
-console.log('🎵 Psychomatrix Music PWA v1.0 - Ready!');
+// เรียกใช้ showPWAStatus เมื่อโหลดแอป
+window.showPWAStatus = showPWAStatus;
