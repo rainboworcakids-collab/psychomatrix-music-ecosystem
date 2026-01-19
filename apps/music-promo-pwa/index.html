@@ -50,7 +50,7 @@
     <div id="installBanner" class="install-banner">
         <div class="banner-content">
             <span>ติดตั้งแอปเพื่อใช้งานออฟไลน์และเข้าถึงได้เร็วขึ้น!</span>
-            <button id="installButton" class="install-btn" onclick="handleInstallClick()">ติดตั้ง</button>
+            <button id="installButton" class="install-btn" onclick="handleAppInstall()">ติดตั้งแอป</button>
             <button id="dismissBanner" class="dismiss-btn">ปิด</button>
         </div>
     </div>
@@ -598,16 +598,14 @@
         }
 
 
-
-    // เพิ่มฟังก์ชันนี้ไว้ในส่วน script ล่างสุดของ index.html
-    function handleInstallClick() {
-        if (window.PWAHandler) {
-            window.PWAHandler.install().then(res => {
-                if (!res.success) console.log('Install failed or dismissed');
-            });
+        async function handleAppInstall() {
+            if (window.PWAHandler) {
+                const result = await window.PWAHandler.install();
+                if (result.success) {
+                    console.log('Native Install Prompt กำลังทำงาน...');
+                }
+            }
         }
-    }
-
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
