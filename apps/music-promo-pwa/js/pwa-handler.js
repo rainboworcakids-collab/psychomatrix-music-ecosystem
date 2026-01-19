@@ -1,9 +1,8 @@
-// pwa-handler.js - ฟังก์ชันจัดการ PWA
-console.log('📱 PWA Handler Module - Loading...');
+// pwa-handler.js - เวอร์ชันอัปเกรด (Handling Install Prompt & Success Status)
+console.log('📱 PWA Handler Module - อัปเดตล่าสุดกำลังโหลด...');
 
 class PWAHandler {
     constructor() {
-        console.log('📱 Initializing PWA Handler');
         this.deferredPrompt = null;
         this.isInstalled = false;
         this.initialize();
@@ -12,197 +11,134 @@ class PWAHandler {
     initialize() {
         this.setupEventListeners();
         this.checkInstallStatus();
-        console.log('✅ PWA Handler initialized');
     }
     
     setupEventListeners() {
-        // Listen for beforeinstallprompt event
+        // 1. ดักจับ Event ก่อนการติดตั้ง
         window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('📱 beforeinstallprompt event captured');
-            
-            // Store the event
+            console.log('📱 ระบบพร้อมสำหรับการติดตั้ง (beforeinstallprompt captured)');
+            // ป้องกันไม่ให้ Browser แสดงหน้าต่างติดตั้งเองโดยอัตโนมัติ
+            e.preventDefault();
+            // เก็บ Event ไว้เรียกใช้ภายหลัง
             this.deferredPrompt = e;
             window.deferredPrompt = e;
             
-            // Update UI
+            // แสดง UI ปุ่มติดตั้งของคุณ
             this.showInstallUI();
         });
         
-        // Listen for appinstalled event
+        // 2. ดักจับเมื่อการติดตั้งเสร็จสมบูรณ์
         window.addEventListener('appinstalled', (e) => {
-            console.log('🎉 PWA installed');
+            console.log('🎉 ยินดีด้วย! ติดตั้ง PWA สำเร็จ');
             this.isInstalled = true;
             this.deferredPrompt = null;
             window.deferredPrompt = null;
             
-            // Hide install UI
+            // ซ่อนปุ่มติดตั้ง
             this.hideInstallUI();
             
-            // Save install status
+            // แจ้งเตือนผู้ใช้ว่าสำเร็จ
+            if (window.showToast) {
+                window.showToast('ติดตั้งแอปสำเร็จ! คุณสามารถเข้าใช้งานได้จากหน้าจอหลัก', 'success');
+            } else {
+                alert('ติดตั้งแอปสำเร็จ!');
+            }
+            
+            // บันทึกสถานะลง LocalStorage
             localStorage.setItem('pwa_installed', 'true');
-            localStorage.setItem('pwa_install_date', new Date().toISOString());
         });
     }
-    
-    checkInstallStatus() {
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-        const localStorageInstalled = localStorage.getItem('pwa_installed') === 'true';
-        
-        this.isInstalled = isStandalone || localStorageInstalled;
-        
-        if (this.isInstalled) {
-            console.log('📱 App is already installed');
-            this.hideInstallUI();
-        }
-        
-        return this.isInstalled;
-    }
-    
-    showInstallUI() {
-        // Show install button in header
-        const installBtn = document.getElementById('installBtn');
-        if (installBtn) {
-            installBtn.style.display = 'flex';
-        }
-        
-        // Show banner if not dismissed
-        const hideBanner = localStorage.getItem('hideInstallBanner');
-        const banner = document.getElementById('installBanner');
-        if (banner && !hideBanner && !this.isInstalled) {
-            banner.classList.add('show');
-        }
-    }
-    
-    hideInstallUI() {
-        // Hide install button
-        const installBtn = document.getElementById('installBtn');
-        if (installBtn) {
-            installBtn.style.display = 'none';
-        }
-        
-        // Hide banner
-        const banner = document.getElementById('installBanner');
-        if (banner) {
-            banner.classList.remove('show');
-        }
-    }
-    
-    
-    async install() {
-        console.log('📱 PWAHandler.install() called');
 
-        // 1. ดึง Event ออกมา (เช็คทั้งใน Class และ Global)
+    // ฟังก์ชันหลักสำหรับกดปุ่มติดตั้ง
+    async install() {
+        console.log('📱 กำลังเริ่มกระบวนการติดตั้ง...');
+
+        // ดึง Prompt Event กลับมาเช็ค
         const promptEvent = this.deferredPrompt || window.deferredPrompt;
 
         if (!promptEvent) {
-            console.warn('⚠️ No deferred prompt available');
-            // ถ้าไม่มี Event แสดงว่า Browser ยังไม่พร้อม หรือติดตั้งไปแล้ว
-            alert('ระบบยังไม่พร้อมติดตั้ง หรือคุณได้ติดตั้งแอปนี้ไปแล้ว\nหากยังไม่มีแอป ให้เลือกเมนู "เพิ่มลงในหน้าจอหลัก" ใน Chrome');
-            return { success: false };
+            console.warn('⚠️ ไม่พบข้อมูลการติดตั้ง (No deferred prompt)');
+            if (window.showToast) {
+                window.showToast('ระบบยังไม่พร้อมติดตั้ง หรือคุณติดตั้งไปแล้ว', 'error');
+            }
+            return { success: false, message: 'No prompt available' };
         }
 
         try {
-            // 2. เรียก Native Prompt (หน้าต่างระบบ)
+            // แจ้งผู้ใช้ว่ากำลังเรียกหน้าต่างติดตั้ง
+            if (window.showToast) window.showToast('กำลังเตรียมการติดตั้ง...', 'info');
+
+            // แสดงหน้าต่างติดตั้งของระบบ (Native Prompt)
             await promptEvent.prompt();
-            console.log('🔔 Native prompt shown to user');
-
-            // 3. รอคำตอบจากผู้ใช้ (ยอมรับ/ปฏิเสธ)
+            
+            // รอรับผลการตัดสินใจของผู้ใช้
             const { outcome } = await promptEvent.userChoice;
-            console.log(`👤 User choice: ${outcome}`);
-
-            // 4. สำคัญมาก: ล้างค่าทิ้งทันทีไม่ว่าผู้ใช้จะเลือกอะไร 
-            // เพราะ Event เดิมจะใช้งานซ้ำไม่ได้อีก (Expired)
-            this.deferredPrompt = null;
-            window.deferredPrompt = null;
-        
-            // 5. ซ่อนปุ่มติดตั้งในหน้าเว็บ
-            this.hideInstallUI();
+            console.log(`👤 ผลการตัดสินใจของผู้ใช้: ${outcome}`);
 
             if (outcome === 'accepted') {
-                console.log('✅ User accepted the install');
-                return { success: true };
+                console.log('✅ ผู้ใช้ตกลงติดตั้ง');
+                // หมายเหตุ: ตรงนี้แอปยังติดตั้งไม่เสร็จ 100% 
+                // สถานะจบจริงๆ จะไปอยู่ที่ event 'appinstalled' ด้านบน
             } else {
-                console.log('❌ User dismissed the install');
-                return { success: false };
+                console.log('❌ ผู้ใช้ปฏิเสธการติดตั้ง');
             }
+
+            // ล้างค่าทิ้งเพราะ Prompt ใช้ซ้ำไม่ได้
+            this.deferredPrompt = null;
+            window.deferredPrompt = null;
+            this.hideInstallUI();
+
+            return { success: outcome === 'accepted' };
+
         } catch (error) {
-            console.error('❌ Critical Installation error:', error);
-            return { success: false };
+            console.error('❌ เกิดข้อผิดพลาดระหว่างติดตั้ง:', error);
+            return { success: false, error };
         }
     }
 
-    
-    simulateInstallPrompt() {
-        console.log('🧪 Simulating install prompt...');
-    
-        // สร้าง mock event
-        const mockEvent = {
-            preventDefault: () => console.log('Mock preventDefault'),
-            prompt: () => {
-                console.log('Mock prompt called');
-            
-                // สร้าง appinstalled event หลังจาก delay
-                setTimeout(() => {
-                    const appInstalledEvent = new Event('appinstalled');
-                    window.dispatchEvent(appInstalledEvent);
-                    console.log('✅ appinstalled event dispatched');
-                }, 1000);
-            
-                return Promise.resolve({ outcome: 'accepted' });
-            },
-            userChoice: Promise.resolve({ outcome: 'accepted' }),
-            platforms: ['web', 'android', 'windows']
-        };
-    
-        // Store in handler
-        this.deferredPrompt = mockEvent;
-        window.deferredPrompt = mockEvent;
-    
-        // Update UI
-        this.showInstallUI();
-    
-        console.log('✅ Mock install prompt created');
-    
-        // Trigger beforeinstallprompt event
-        const event = new Event('beforeinstallprompt');
-        window.dispatchEvent(event);
-    
-        const result = { success: true, message: 'สร้าง Install Prompt จำลองสำเร็จ' };
-    
-        if (window.showToast) {
-            window.showToast(result.message, 'success');
+    showInstallUI() {
+        const installBtn = document.getElementById('installButton') || document.getElementById('installBtn');
+        const installBanner = document.getElementById('installBanner');
+        
+        if (installBtn) installBtn.style.display = 'block';
+        if (installBanner) installBanner.classList.remove('hidden');
+        
+        // อัปเดตสถานะใน Debug Panel (ถ้ามี)
+        this.updateDebugUI();
+    }
+
+    hideInstallUI() {
+        const installBtn = document.getElementById('installButton') || document.getElementById('installBtn');
+        const installBanner = document.getElementById('installBanner');
+        
+        if (installBtn) installBtn.style.display = 'none';
+        if (installBanner) installBanner.classList.add('hidden');
+        
+        this.updateDebugUI();
+    }
+
+    checkInstallStatus() {
+        if (window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('pwa_installed') === 'true') {
+            this.isInstalled = true;
+            this.hideInstallUI();
         }
-    
-        return result;
+    }
+
+    updateDebugUI() {
+        const statusEl = document.getElementById('pwaStatus');
+        if (statusEl) {
+            statusEl.textContent = JSON.stringify(this.getStatus(), null, 2);
+        }
     }
 
     getStatus() {
         return {
-            hasDeferredPrompt: !!this.deferredPrompt,
+            hasDeferredPrompt: !!(this.deferredPrompt || window.deferredPrompt),
             isInstalled: this.isInstalled,
-            displayMode: this.getDisplayMode(),
-            localStorage: {
-                pwa_installed: localStorage.getItem('pwa_installed'),
-                hideInstallBanner: localStorage.getItem('hideInstallBanner'),
-                pwa_install_date: localStorage.getItem('pwa_install_date')
-            },
-            userAgent: navigator.userAgent.substring(0, 100)
+            displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'
         };
-    }
-    
-    getDisplayMode() {
-        if (window.matchMedia('(display-mode: standalone)').matches) return 'standalone';
-        if (window.matchMedia('(display-mode: fullscreen)').matches) return 'fullscreen';
-        if (window.matchMedia('(display-mode: minimal-ui)').matches) return 'minimal-ui';
-        return 'browser';
-    }
-    
-    getInstallationStatus() {
-        return this.isInstalled;
     }
 }
 
-// Initialize PWAHandler
+// สร้าง Instance และส่งออกไปที่ Window
 window.PWAHandler = new PWAHandler();
-
-console.log('✅ PWA Handler loaded successfully');
