@@ -12,7 +12,12 @@ const PRECACHE_ASSETS = [
   './js/app.js',
   './js/music-core.js',
   './js/music-generator.js',
-  './js/pwa-handler.js'
+  './js/pwa-handler.js',
+  './assets/logo.png',
+  './icon/favicon.ico',  
+  './icon/icon-72x72.png',
+  './icon/icon-192x192.png',
+  './icon/icon-152x152.png'
 ];
 
 // Install event - precache assets
